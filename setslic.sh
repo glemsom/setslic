@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 #
 # Script for adding SLIC and related ACPI values to a VirtualBox VM
 #
