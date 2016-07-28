@@ -96,11 +96,28 @@ DmiSystemVersion=$(getDMI SYSTEM "Version")
 DmiSystemSerial=$(getDMI SYSTEM "Serial Number")
 DmiSystemUuid=$(getDMI SYSTEM UUID)
 DmiSystemSKU=$(getDMI SYSTEM "SKU Number")
-DmiSystemFamily=$DmiSystemVersion   # <- we can do better here?
+DmiSystemFamily=$(getDMI SYSTEM Family)
 DmiBoardProduct=$(getDMI BASEBOARD "Product Name")
 DmiBoardSerial=$(getDMI BASEBOARD "Serial Number")
 DmiBoardVendor=$(getDMI BASEBOARD Manufacturer)
 DmiBoardVersion=$(getDMI BASEBOARD Version)
+
+DmiBoardAssetTag=$(getDMI BASEBOARD "Asset Tag")
+DmiBoardLocInChass=$(getDMI BASEBOARD "Location In Chassis")
+#DmiBoardBoardType=$(getDMI BASEBOARD Type)
+# Motherboard = 10
+DmiBoardBoardType=10
+
+DmiChassisVendor=$(getDMI CHASSIS Manufacturer)
+#DmiChassisType=$(getDMI CHASSIS Type)
+# Notebook = 10
+DmiChassisType=10
+DmiChassisVersion=$(getDMI CHASSIS Version)
+DmiChassisSerial=$(getDMI CHASSIS "Serial Number")
+DmiChassisAssetTag=$(getDMI CHASSIS "Asset Tag")
+
+DmiProcManufacturer=$(getDMI PROCESSOR Manufacturer)
+DmiProcVersion=$(getDMI PROCESSOR Version)
 ################################################################
 
 
@@ -125,7 +142,10 @@ $vboxmanage setextradata "${vm}" VBoxInternal/Devices/acpi/0/Config/CustomTable 
 # Configure ACPI values #####################################
 cfgCmd="$vboxmanage setextradata {${vm}} $cfgPath"
 dmiElements=( DmiBIOSVendor DmiBIOSVersion DmiBIOSReleaseDate DmiBIOSReleaseMajor DmiBIOSReleaseMinor DmiBIOSFirmwareMajor DmiBIOSFirmwareMinor DmiSystemVendor \
-		DmiSystemProduct DmiSystemVersion DmiSystemSerial DmiSystemUuid DmiSystemSKU DmiSystemFamily DmiBoardProduct DmiBoardSerial DmiBoardVendor DmiBoardVersion )
+		DmiSystemProduct DmiSystemVersion DmiSystemSerial DmiSystemUuid DmiSystemSKU DmiSystemFamily DmiBoardProduct DmiBoardSerial DmiBoardVendor DmiBoardVersion \
+		DmiBoardAssetTag DmiBoardLocInChass DmiBoardBoardType \
+		DmiChassisVendor DmiChassisType DmiChassisVersion DmiChassisSerial DmiChassisAssetTag \
+		DmiProcManufacturer DmiProcVersion )
 for element in ${dmiElements[@]}; do
 	${cfgCmd}/${element} "$(eval echo $`echo $element`)"
 done
