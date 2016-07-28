@@ -60,9 +60,9 @@ getDMI() {
 	local delimiter="${4:-.}"
 
 	if [ $field == false ]; then
-		val=$($dmidecode -t "$dtype" | grep "$entry" | sed "s/.*${entry}: //")
+		val=$($dmidecode -t "$dtype" | grep -m 1 "^	${entry}:" | sed "s/.*${entry}: //")
 	else
-		val=$($dmidecode -t "$dtype" | grep "$entry" | sed "s/.*${entry}: //" | cut -d $delimiter -f $field)
+		val=$($dmidecode -t "$dtype" | grep -m 1 "^	${entry}:" | sed "s/.*${entry}: //" | cut -d $delimiter -f $field)
 	fi
 	if [ -n "$val" ]; then
 		echo "$val"
