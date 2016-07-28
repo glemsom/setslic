@@ -76,7 +76,7 @@ getDMI() {
 # Setup basic commands used later ##############################
 sudo=$(which sudo) || errorHandle "sudo not found"
 zenity=$(which zenity) || errorHandle "zenity no found"
-dmidecodeBin=$(which dmidecode) || errorHandle "dmidecode not found"
+dmidecodeBin=$(sudo which dmidecode) || errorHandle "dmidecode not found"
 vboxmanage=$(which vboxmanage) || errorHandle "vboxmanage not found"
 dmidecode="sudo $dmidecodeBin"
 ################################################################
