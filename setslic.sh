@@ -118,8 +118,17 @@ DmiChassisAssetTag=$(getDMI CHASSIS "Asset Tag")
 
 DmiProcManufacturer=$(getDMI PROCESSOR Manufacturer)
 DmiProcVersion=$(getDMI PROCESSOR Version)
-################################################################
 
+# DELL Fix ####################################################
+if [[ "$DmiBIOSFirmwareMajor" == *"ERROR"* ]]; then
+	DmiBIOSFirmwareMajor=$DmiBIOSReleaseMajor
+	echo "This seems to be a DELL system, fixing BIOS Major Firmware version info..."
+fi
+if [[ "$DmiBIOSFirmwareMinor" == *"ERROR"* ]]; then
+	DmiBIOSFirmwareMinor=$DmiBIOSReleaseMinor
+	echo "This seems to be a DELL system, fixing BIOS Minor Firmware version info..."
+fi
+###############################################################
 
 # Choose VM ###################################################
 vmList=$($vboxmanage list vms | tr '{' '\n' | sed -e 's/"//g' -e 's/}//g') 
@@ -155,5 +164,5 @@ done
 productKey=$(sudo hexdump -s 56 -e '/29 "%s\n"' /sys/firmware/acpi/tables/MSDM)
 [ -z "$productKey" ] && errorHandle "Error fetching product key from acpi table MSDM"
 echo "Your product key is: $productKey"
-$zenity --info --text "Your product key is: $productKey"
+$zenity --info --height=70 --width=400 --text "Your product key is: $productKey"
 ############################################################
