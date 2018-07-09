@@ -60,9 +60,9 @@ getDMI() {
 	local delimiter="${4:-.}"
 
 	if [ $field == false ]; then
-		val=$($dmidecode -t "$dtype" | grep "$entry" | sed "s/.*${entry}: //")
+		val=$($dmidecode -t "$dtype" | grep -m 1 "^	${entry}:" | sed "s/.*${entry}: //")
 	else
-		val=$($dmidecode -t "$dtype" | grep "$entry" | sed "s/.*${entry}: //" | cut -d $delimiter -f $field)
+		val=$($dmidecode -t "$dtype" | grep -m 1 "^	${entry}:" | sed "s/.*${entry}: //" | cut -d $delimiter -f $field)
 	fi
 	if [ -n "$val" ]; then
 		echo "$val"
@@ -76,7 +76,7 @@ getDMI() {
 # Setup basic commands used later ##############################
 sudo=$(which sudo) || errorHandle "sudo not found"
 zenity=$(which zenity) || errorHandle "zenity no found"
-dmidecodeBin=$(which dmidecode) || errorHandle "dmidecode not found"
+dmidecodeBin=$(sudo which dmidecode) || errorHandle "dmidecode not found"
 vboxmanage=$(which vboxmanage) || errorHandle "vboxmanage not found"
 dmidecode="sudo $dmidecodeBin"
 ################################################################
@@ -96,13 +96,39 @@ DmiSystemVersion=$(getDMI SYSTEM "Version")
 DmiSystemSerial=$(getDMI SYSTEM "Serial Number")
 DmiSystemUuid=$(getDMI SYSTEM UUID)
 DmiSystemSKU=$(getDMI SYSTEM "SKU Number")
-DmiSystemFamily=$DmiSystemVersion   # <- we can do better here?
+DmiSystemFamily=$(getDMI SYSTEM Family)
 DmiBoardProduct=$(getDMI BASEBOARD "Product Name")
 DmiBoardSerial=$(getDMI BASEBOARD "Serial Number")
 DmiBoardVendor=$(getDMI BASEBOARD Manufacturer)
 DmiBoardVersion=$(getDMI BASEBOARD Version)
-################################################################
 
+DmiBoardAssetTag=$(getDMI BASEBOARD "Asset Tag")
+DmiBoardLocInChass=$(getDMI BASEBOARD "Location In Chassis")
+#DmiBoardBoardType=$(getDMI BASEBOARD Type)
+# Motherboard = 10
+DmiBoardBoardType=10
+
+DmiChassisVendor=$(getDMI CHASSIS Manufacturer)
+#DmiChassisType=$(getDMI CHASSIS Type)
+# Notebook = 10
+DmiChassisType=10
+DmiChassisVersion=$(getDMI CHASSIS Version)
+DmiChassisSerial=$(getDMI CHASSIS "Serial Number")
+DmiChassisAssetTag=$(getDMI CHASSIS "Asset Tag")
+
+DmiProcManufacturer=$(getDMI PROCESSOR Manufacturer)
+DmiProcVersion=$(getDMI PROCESSOR Version)
+
+# DELL Fix ####################################################
+if [[ "$DmiBIOSFirmwareMajor" == *"ERROR"* ]]; then
+	DmiBIOSFirmwareMajor=$DmiBIOSReleaseMajor
+	echo "This seems to be a DELL system, fixing BIOS Major Firmware version info..."
+fi
+if [[ "$DmiBIOSFirmwareMinor" == *"ERROR"* ]]; then
+	DmiBIOSFirmwareMinor=$DmiBIOSReleaseMinor
+	echo "This seems to be a DELL system, fixing BIOS Minor Firmware version info..."
+fi
+###############################################################
 
 # Choose VM ###################################################
 vmList=$($vboxmanage list vms | tr '{' '\n' | sed -e 's/"//g' -e 's/}//g') 
@@ -125,7 +151,10 @@ $vboxmanage setextradata "${vm}" VBoxInternal/Devices/acpi/0/Config/CustomTable 
 # Configure ACPI values #####################################
 cfgCmd="$vboxmanage setextradata {${vm}} $cfgPath"
 dmiElements=( DmiBIOSVendor DmiBIOSVersion DmiBIOSReleaseDate DmiBIOSReleaseMajor DmiBIOSReleaseMinor DmiBIOSFirmwareMajor DmiBIOSFirmwareMinor DmiSystemVendor \
-		DmiSystemProduct DmiSystemVersion DmiSystemSerial DmiSystemUuid DmiSystemSKU DmiSystemFamily DmiBoardProduct DmiBoardSerial DmiBoardVendor DmiBoardVersion )
+		DmiSystemProduct DmiSystemVersion DmiSystemSerial DmiSystemUuid DmiSystemSKU DmiSystemFamily DmiBoardProduct DmiBoardSerial DmiBoardVendor DmiBoardVersion \
+		DmiBoardAssetTag DmiBoardLocInChass DmiBoardBoardType \
+		DmiChassisVendor DmiChassisType DmiChassisVersion DmiChassisSerial DmiChassisAssetTag \
+		DmiProcManufacturer DmiProcVersion )
 for element in ${dmiElements[@]}; do
 	${cfgCmd}/${element} "$(eval echo $`echo $element`)"
 done
@@ -135,5 +164,5 @@ done
 productKey=$(sudo hexdump -s 56 -e '/29 "%s\n"' /sys/firmware/acpi/tables/MSDM)
 [ -z "$productKey" ] && errorHandle "Error fetching product key from acpi table MSDM"
 echo "Your product key is: $productKey"
-$zenity --info --text "Your product key is: $productKey"
+$zenity --info --height=70 --width=400 --text "Your product key is: $productKey"
 ############################################################
