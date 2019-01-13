@@ -151,12 +151,21 @@ $vboxmanage setextradata "${vm}" VBoxInternal/Devices/acpi/0/Config/CustomTable 
 # Configure ACPI values #####################################
 cfgCmd="$vboxmanage setextradata {${vm}} $cfgPath"
 dmiElements=( DmiBIOSVendor DmiBIOSVersion DmiBIOSReleaseDate DmiBIOSReleaseMajor DmiBIOSReleaseMinor DmiBIOSFirmwareMajor DmiBIOSFirmwareMinor DmiSystemVendor \
-		DmiSystemProduct DmiSystemVersion DmiSystemSerial DmiSystemUuid DmiSystemSKU DmiSystemFamily DmiBoardProduct DmiBoardSerial DmiBoardVendor DmiBoardVersion \
+		DmiSystemProduct DmiSystemVersion:string DmiSystemSerial DmiSystemUuid DmiSystemSKU DmiSystemFamily DmiBoardProduct DmiBoardSerial DmiBoardVendor DmiBoardVersion \
 		DmiBoardAssetTag DmiBoardLocInChass DmiBoardBoardType \
 		DmiChassisVendor DmiChassisType DmiChassisVersion DmiChassisSerial DmiChassisAssetTag \
 		DmiProcManufacturer DmiProcVersion )
 for element in ${dmiElements[@]}; do
-	${cfgCmd}/${element} "$(eval echo $`echo $element`)"
+	case "$element" in
+		*:*)
+			prefix=${element#*:}:
+			element=${element%:*}
+			;;
+		*)
+			prefix=
+			;;
+	esac
+	${cfgCmd}/${element} "${prefix}$(eval echo $`echo $element`)"
 done
 #############################################################
 
