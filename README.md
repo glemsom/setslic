@@ -16,5 +16,3 @@ Use at your own risk, might not work universally across all vendors. (Tested wit
 	* slmgr /rearm
 
 This script is from my blog at https://glemsomtechs.blogspot.com/2018/07/acpi-slic-in-virtualbox.html
-
-Donation accepted at 14KGwX7e85vJLAbgRg2boGTqN5WEaBHAqP
